@@ -32,8 +32,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.fitnessapplication.ui.theme.FitnessApplicationTheme
 import kotlinx.coroutines.launch
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 
 class MainActivity : ComponentActivity() {
 
@@ -48,9 +52,18 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun Screen(modifier: Modifier = Modifier) {
+enum class MainScreen() {
+    Start,
+    Macro,
+    Workouts,
+}
 
+@Composable
+fun Screen(
+    modifier: Modifier = Modifier,
+) {
+
+    val navController = rememberNavController()
     val drawerState = rememberDrawerState(
         initialValue = DrawerValue.Closed
     )
@@ -60,7 +73,7 @@ fun Screen(modifier: Modifier = Modifier) {
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                DrawerContent(viewModel = MainViewModel())
+                DrawerContent(navController = navController)
             }
         }
     ) {
@@ -85,8 +98,26 @@ fun Screen(modifier: Modifier = Modifier) {
 @Composable
 fun DrawerContent(
     modifier: Modifier = Modifier,
-    viewModel: MainViewModel
+    navController: NavHostController
 ) {
+
+    NavHost(
+        navController = navController,
+        startDestination = MainScreen.Start.name,
+    ) {
+        composable(route = MainScreen.Start.name) {
+            Text(text = "Welcome to the Start Screen", modifier = Modifier.padding(16.dp))
+        }
+
+        composable(route = MainScreen.Macro.name) {
+            MacronutrientScreen()
+        }
+
+        composable(route = MainScreen.Workouts.name) {
+            WorkoutScreen()
+        }
+    }
+
     Text(
         text = "App Name",
         fontSize = 24.sp,
@@ -110,7 +141,7 @@ fun DrawerContent(
             )
         },
         selected = false,
-        onClick = { /*TODO*/ /*navigate to a screen*/ }
+        onClick = { navController.navigate(MainScreen.Macro.name) }
     )
 
     NavigationDrawerItem(
@@ -128,7 +159,7 @@ fun DrawerContent(
             )
         },
         selected = false,
-        onClick = { viewModel.navigateToWorkoutScreen() }
+        onClick = { navController.navigate(MainScreen.Workouts.name) }
     )
 }
 
