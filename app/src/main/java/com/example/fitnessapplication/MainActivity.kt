@@ -11,8 +11,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.outlined.Build
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -28,6 +32,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,6 +43,7 @@ import com.example.fitnessapplication.ui.theme.FitnessApplicationTheme
 import kotlinx.coroutines.launch
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.CoroutineScope
 
@@ -70,7 +76,6 @@ fun Screen(
         initialValue = DrawerValue.Closed
     )
     val scope = rememberCoroutineScope()
-
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -122,11 +127,13 @@ fun DrawerContent(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     scope: CoroutineScope,
-    drawerState: DrawerState
+    drawerState: DrawerState,
 ) {
+    // Track the current destination
+    val currentDestination by navController.currentBackStackEntryAsState()
 
     Text(
-        text = "App Name",
+        text = "Menu",
         fontSize = 24.sp,
         modifier = Modifier.padding(16.dp)
     )
@@ -136,7 +143,7 @@ fun DrawerContent(
     NavigationDrawerItem(
         icon = {
             Icon(
-                imageVector = Icons.Default.FavoriteBorder,
+                imageVector = if(currentDestination?.destination?.route == MainScreen.Macro.name){Icons.Default.Favorite} else {Icons.Outlined.FavoriteBorder},
                 contentDescription = "Account"
             )
         },
@@ -147,7 +154,7 @@ fun DrawerContent(
                 modifier = Modifier.padding(2.dp)
             )
         },
-        selected = false,
+        selected = currentDestination?.destination?.route == MainScreen.Macro.name,
         onClick = {
             scope.launch { drawerState.close() }
             navController.navigate(MainScreen.Macro.name)
@@ -157,7 +164,7 @@ fun DrawerContent(
     NavigationDrawerItem(
         icon = {
             Icon(
-                imageVector = Icons.Default.Build,
+                imageVector = if(currentDestination?.destination?.route == MainScreen.Workouts.name){Icons.Default.Build} else {Icons.Outlined.Build},
                 contentDescription = "Account"
             )
         },
@@ -168,11 +175,11 @@ fun DrawerContent(
                 modifier = Modifier.padding(2.dp)
             )
         },
-        selected = false,
+        selected = currentDestination?.destination?.route == MainScreen.Workouts.name, // Dynamically set
         onClick = {
             scope.launch { drawerState.close() }
             navController.navigate(MainScreen.Workouts.name)
-        },
+        }
     )
 }
 
