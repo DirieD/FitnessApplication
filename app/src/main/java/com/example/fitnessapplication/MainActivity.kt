@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -38,6 +39,7 @@ import kotlinx.coroutines.launch
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.CoroutineScope
 
 class MainActivity : ComponentActivity() {
 
@@ -73,7 +75,11 @@ fun Screen(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                DrawerContent(navController = navController)
+                DrawerContent(
+                    navController = navController,
+                    scope = scope,
+                    drawerState = drawerState
+                )
             }
         }
     ) {
@@ -90,6 +96,22 @@ fun Screen(
 
             }
         ) { padding ->
+            NavHost(
+                navController = navController,
+                startDestination = MainScreen.Start.name,
+                modifier = Modifier.padding(padding)
+            ) {
+                composable(route = MainScreen.Start.name) {
+                }
+
+                composable(route = MainScreen.Macro.name) {
+                    MacronutrientScreen()
+                }
+
+                composable(route = MainScreen.Workouts.name) {
+                    WorkoutScreen()
+                }
+            }
             ScreenContent(modifier = Modifier.padding(padding))
         }
     }
@@ -98,25 +120,10 @@ fun Screen(
 @Composable
 fun DrawerContent(
     modifier: Modifier = Modifier,
-    navController: NavHostController
+    navController: NavHostController,
+    scope: CoroutineScope,
+    drawerState: DrawerState
 ) {
-
-    NavHost(
-        navController = navController,
-        startDestination = MainScreen.Start.name,
-    ) {
-        composable(route = MainScreen.Start.name) {
-            Text(text = "Welcome to the Start Screen", modifier = Modifier.padding(16.dp))
-        }
-
-        composable(route = MainScreen.Macro.name) {
-            MacronutrientScreen()
-        }
-
-        composable(route = MainScreen.Workouts.name) {
-            WorkoutScreen()
-        }
-    }
 
     Text(
         text = "App Name",
@@ -141,7 +148,10 @@ fun DrawerContent(
             )
         },
         selected = false,
-        onClick = { navController.navigate(MainScreen.Macro.name) }
+        onClick = {
+            scope.launch { drawerState.close() }
+            navController.navigate(MainScreen.Macro.name)
+        }
     )
 
     NavigationDrawerItem(
@@ -159,7 +169,10 @@ fun DrawerContent(
             )
         },
         selected = false,
-        onClick = { navController.navigate(MainScreen.Workouts.name) }
+        onClick = {
+            scope.launch { drawerState.close() }
+            navController.navigate(MainScreen.Workouts.name)
+        },
     )
 }
 
