@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -12,10 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.outlined.Build
-import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerState
@@ -49,33 +48,30 @@ import kotlinx.coroutines.CoroutineScope
 
 class MainActivity : ComponentActivity() {
 
+    private val viewModel: MainViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             FitnessApplicationTheme {
-                Screen()
+                Screen(viewModel = viewModel)
             }
         }
     }
 }
 
-enum class MainScreen() {
-    Start,
-    Macro,
-    Workouts,
-}
 
 @Composable
 fun Screen(
     modifier: Modifier = Modifier,
+    viewModel: MainViewModel
 ) {
 
     val navController = rememberNavController()
-    val drawerState = rememberDrawerState(
-        initialValue = DrawerValue.Closed
-    )
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -93,20 +89,24 @@ fun Screen(
                 TopBar(
                     onOpenDrawer = {
                         scope.launch {
-                            drawerState.apply { if (isClosed) open() else close() }
+                            if (drawerState.isClosed) drawerState.open() else drawerState.close()
                         }
-                    }
-
+                    },
+                    appBarTitle = viewModel.title // Observe the title in the top bar
                 )
-
             }
         ) { padding ->
+            SharedViewModel(
+                navController = navController,
+                mainViewModel = viewModel
+            ) // This updates the title
             NavHost(
                 navController = navController,
                 startDestination = MainScreen.Start.name,
                 modifier = Modifier.padding(padding)
             ) {
                 composable(route = MainScreen.Start.name) {
+                    Text("Welcome to the Fitness App!")
                 }
 
                 composable(route = MainScreen.Macro.name) {
@@ -121,6 +121,7 @@ fun Screen(
         }
     }
 }
+
 
 @Composable
 fun DrawerContent(
@@ -143,7 +144,13 @@ fun DrawerContent(
     NavigationDrawerItem(
         icon = {
             Icon(
-                imageVector = if(currentDestination?.destination?.route == MainScreen.Macro.name){Icons.Default.Favorite} else {Icons.Outlined.FavoriteBorder},
+                imageVector = if (
+                    currentDestination?.destination?.route == MainScreen.Macro.name
+                ) {
+                    Icons.Default.Favorite
+                } else {
+                    Icons.Outlined.FavoriteBorder
+                },
                 contentDescription = "Account"
             )
         },
@@ -164,7 +171,13 @@ fun DrawerContent(
     NavigationDrawerItem(
         icon = {
             Icon(
-                imageVector = if(currentDestination?.destination?.route == MainScreen.Workouts.name){Icons.Default.Build} else {Icons.Outlined.Build},
+                imageVector = if (
+                    currentDestination?.destination?.route == MainScreen.Workouts.name
+                ) {
+                    Icons.Default.Build
+                } else {
+                    Icons.Outlined.Build
+                },
                 contentDescription = "Account"
             )
         },
@@ -189,7 +202,8 @@ fun ScreenContent(modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(onOpenDrawer: () -> Unit) {
+fun TopBar(onOpenDrawer: () -> Unit, appBarTitle: String) {
+
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -207,7 +221,9 @@ fun TopBar(onOpenDrawer: () -> Unit) {
             )
         },
         title = {
-            Text(text = "Fitness App")
+            Text(
+                text = appBarTitle
+            )
         }
     )
 }
